@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using TechJobs.Data;
 using TechJobs.ViewModels;
+using TechJobs.Models;
 
 namespace TechJobs.Controllers
 {
@@ -18,9 +19,9 @@ namespace TechJobs.Controllers
         // The detail display for a given Job at URLs like /Job?id=17
         public IActionResult Index(int id)
         {
-            // TODO #1 - get the Job with the given ID and pass it into the view
-
-            return View();
+            Job job = new Job();
+            job = jobData.Find(id);
+            return View(job);
         }
 
         public IActionResult New()
@@ -32,11 +33,29 @@ namespace TechJobs.Controllers
         [HttpPost]
         public IActionResult New(NewJobViewModel newJobViewModel)
         {
-            // TODO #6 - Validate the ViewModel and if valid, create a 
-            // new Job and add it to the JobData data store. Then
-            // redirect to the Job detail (Index) action/view for the new Job.
-
-            return View(newJobViewModel);
+            if (ModelState.IsValid)
+            {
+                Employer employer = jobData.Employers.Find(newJobViewModel.EmployerID);
+                Location location = jobData.Locations.Find(newJobViewModel.LocationID);
+                CoreCompetency skill = jobData.CoreCompetencies.Find(newJobViewModel.SkillID);
+                PositionType position = jobData.PositionTypes.Find(newJobViewModel.TypeID);
+                Job newJob = new Job()
+                {
+                    Name = newJobViewModel.Name,
+                    Employer = employer,
+                    Location = location,
+                    CoreCompetency = skill,
+                    PositionType = position
+                };
+                jobData.Jobs.Add(newJob);
+                int id = newJob.ID;
+                string path = string.Format("/Job?id={0}", id);
+                return Redirect(path);
+            }
+            else
+            {
+                return View(newJobViewModel);
+            }
         }
     }
 }
